@@ -20,7 +20,7 @@ in TensorBoard.
 """
 
 import os 
-# os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
+os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 os.environ["CUDA_VISIBLE_DEVICES"] = '2' # use the CPU only
 
 import math
@@ -31,7 +31,7 @@ import numpy as np
 import tensorflow as tf
 
 import configuration
-import show_and_tell_model_cpu as show_and_tell_model
+import show_and_tell_model
 
 
 val_img_dir = '../data/aichallenge/TFRecordFile/'

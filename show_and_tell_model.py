@@ -19,10 +19,6 @@
 Oriol Vinyals, Alexander Toshev, Samy Bengio, Dumitru Erhan
 """
 
-import os 
-os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
-os.environ["CUDA_VISIBLE_DEVICES"] = '1' # use the second GPU
-
 import numpy as np
 import tensorflow as tf
 
