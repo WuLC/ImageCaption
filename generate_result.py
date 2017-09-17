@@ -2,7 +2,7 @@
 # @Author: lc
 # @Date:   2017-09-17 00:22:17
 # @Last Modified by:   lc
-# @Last Modified time: 2017-09-17 14:29:45
+# @Last Modified time: 2017-09-17 15:35:24
 
 import sys
 import math
@@ -25,7 +25,7 @@ from inference_utils import vocabulary
 
 checkpoint_path = '../aichallenge_model_inception/train/'
 vocab_file = '../data/aichallenge/TFRecordFile/word_counts.txt'
-test_img_dir = '../data/aichallenge/tmp/'
+test_img_dir = '../data/aichallenge/test1500png/'
 result_json_file = '../data/aichallenge/result/result{0}.json'.format(datetime.now().strftime("%Y%m%d%H%M%S"))
 
 FLAGS = tf.flags.FLAGS
