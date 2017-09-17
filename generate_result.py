@@ -2,7 +2,7 @@
 # @Author: lc
 # @Date:   2017-09-17 00:22:17
 # @Last Modified by:   lc
-# @Last Modified time: 2017-09-17 15:35:24
+# @Last Modified time: 2017-09-17 16:07:09
 
 import sys
 import math
@@ -68,7 +68,7 @@ def main(_):
             sentence = ''.join(sentence)
             image_id = int(int(hashlib.sha256(filename.split('.')[0].encode('utf8')).hexdigest(), 16) % sys.maxsize)
             result.append({'caption': sentence, 'image_id':image_id})
-            if count % 500 == 0:
+            if count % 100 == 0:
                 print('finish generating caption for {0} images'.format(count))
         print('finish totally {0} images'.format(count))
         with open(FLAGS.result_json_file, encoding = 'utf8', mode = 'w') as f:

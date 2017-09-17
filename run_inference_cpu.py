@@ -23,7 +23,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = '2' # use GPU only
 import tensorflow as tf
 
 import configuration
-import inference_wrapper_cpu as inference_wrapper
+import inference_wrapper
 from inference_utils import caption_generator
 from inference_utils import vocabulary
 
