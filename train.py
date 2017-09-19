@@ -27,8 +27,10 @@ import show_and_tell_model
 train_img_dir = '../data/aichallenge/TFRecordFile/'
 input_file_pattern = train_img_dir + 'train-?????-of-00795'
 inception_checkpoint_file = '../pretrained_models/inception_v3.ckpt'
-train_dir = '../aichallenge_model_inception/train/'
-word_embedding_file = '../aichallenge_model_inception/word_vector.npy'
+# trained_models_dir = '../aichallenge_model_inception/train/'
+trained_models_dir = '../aichallenge_model_inception_with_custom_embedding/train/'
+word_embedding_file = '../aichallenge_model_inception_with_custom_embedding/word_vector.npy'
+custom_word_embedding = True
 train_inception = False
 num_steps = 1500000
 
@@ -38,10 +40,12 @@ tf.flags.DEFINE_string("input_file_pattern", input_file_pattern,
                        "File pattern of sharded TFRecord input files.")
 tf.flags.DEFINE_string("inception_checkpoint_file", inception_checkpoint_file,
                        "Path to a pretrained inception_v3 model.")
-tf.flags.DEFINE_string("train_dir", train_dir,
+tf.flags.DEFINE_string("trained_models_dir", trained_models_dir,
                        "Directory for saving and loading model checkpoints.")
 tf.flags.DEFINE_string("word_embedding_file", word_embedding_file,
                        "word embedding of words in the vocabulary obtained by word2vec")
+tf.flags.DEFINE_string("custom_word_embedding", custom_word_embedding,
+                       "Whether to use the word embedding file")
 tf.flags.DEFINE_boolean("train_inception", train_inception,
                         "Whether to train inception submodel variables.")
 tf.flags.DEFINE_integer("number_of_steps", num_steps, "Number of training steps.")
@@ -53,7 +57,7 @@ tf.logging.set_verbosity(tf.logging.INFO)
 
 def main(unused_argv):
   assert FLAGS.input_file_pattern, "--input_file_pattern is required"
-  assert FLAGS.train_dir, "--train_dir is required"
+  assert FLAGS.trained_models_dir, "--trained_models_dir is required"
 
   model_config = configuration.ModelConfig()
   model_config.input_file_pattern = FLAGS.input_file_pattern
@@ -62,17 +66,20 @@ def main(unused_argv):
   training_config = configuration.TrainingConfig()
 
   # Create training directory.
-  train_dir = FLAGS.train_dir
-  if not tf.gfile.IsDirectory(train_dir):
-    tf.logging.info("Creating training directory: %s", train_dir)
-    tf.gfile.MakeDirs(train_dir)
+  trained_models_dir = FLAGS.trained_models_dir
+  if not tf.gfile.IsDirectory(trained_models_dir):
+    tf.logging.info("Creating training directory: %s", trained_models_dir)
+    tf.gfile.MakeDirs(trained_models_dir)
 
   # Build the TensorFlow graph.
   g = tf.Graph()
   with g.as_default():
     # Build the model, train from scratch
     model = show_and_tell_model.ShowAndTellModel(
-        model_config, mode="train", train_inception=FLAGS.train_inception)
+            model_config, 
+            mode="train", 
+            train_inception=FLAGS.train_inception,
+            custom_word_embedding = FLAGS.custom_word_embedding)
     model.build()
     
     # Set up the learning rate.
@@ -112,7 +119,7 @@ def main(unused_argv):
   # Run training.
   tf.contrib.slim.learning.train(
       train_op,
-      train_dir,
+      trained_models_dir,
       log_every_n_steps=FLAGS.log_every_n_steps,
       graph=g,
       global_step=model.global_step,

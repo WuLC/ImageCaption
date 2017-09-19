@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: lc
 # @Date:   2017-09-17 00:22:17
-# @Last Modified by:   lc
-# @Last Modified time: 2017-09-18 10:38:40
+# @Last Modified by:   WuLC
+# @Last Modified time: 2017-09-19 15:35:41
 
 import sys
 import math
@@ -10,7 +10,7 @@ import time
 import hashlib
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
-os.environ["CUDA_VISIBLE_DEVICES"] = '0' # use the second GPU
+os.environ["CUDA_VISIBLE_DEVICES"] = '1' # decide to use CPU or GPU
 from datetime import datetime
 import glob
 import logging
@@ -40,6 +40,9 @@ tf.flags.DEFINE_string("test_img_dir", test_img_dir,
 
 
 def main(_):
+    # Create the vocabulary.
+    vocab = vocabulary.Vocabulary(FLAGS.vocab_file)
+    
     # validate every checkpoint file in the checkpoint path
     for path in glob.glob(FLAGS.checkpoint_path + '*.meta'):
         checkpoint_file = path.replace('\\', '/').rstrip('.meta')
@@ -51,9 +54,6 @@ def main(_):
             model = inference_wrapper.InferenceWrapper()
             restore_fn = model.build_graph_from_config(configuration.ModelConfig(), checkpoint_file)
         g.finalize()
-
-        # Create the vocabulary.
-        vocab = vocabulary.Vocabulary(FLAGS.vocab_file)
 
         with tf.Session(graph=g) as sess:
             # Load the model from checkpoint.
@@ -78,7 +78,9 @@ def main(_):
                     print('finish generating caption for {0} images'.format(count))
             print('finish totally {0} images'.format(count))
             with open(result_json_file, encoding = 'utf8', mode = 'w') as f:
-                json.dump(result, f, ensure_ascii=False)
+                json.dump(result, f, ensure_ascii = False)
+            logging.info('finish generating {1} from {0}'.format(checkpoint_file, result_json_file))
+            logging.info('time consuming: {0}\n'.format(time.time() - start_time))
             print('time consuming: {0}s'.format(time.time() - start_time))
 
 

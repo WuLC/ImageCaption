@@ -34,7 +34,7 @@ class ShowAndTellModel(object):
   Oriol Vinyals, Alexander Toshev, Samy Bengio, Dumitru Erhan
   """
 
-  def __init__(self, config, mode, train_inception=False):
+  def __init__(self, config, mode, train_inception=False, custom_word_embedding = False):
     """Basic setup.
 
     Args:
@@ -46,6 +46,7 @@ class ShowAndTellModel(object):
     self.config = config
     self.mode = mode
     self.train_inception = train_inception
+    self.custom_word_embedding = custom_word_embedding
 
     # Reader for the input data.
     self.reader = tf.TFRecordReader()
@@ -220,15 +221,16 @@ class ShowAndTellModel(object):
       self.seq_embeddings
     """
     with tf.variable_scope("seq_embedding"), tf.device("/cpu:0"):
-      embedding_map = tf.get_variable(
-          name="map",
-          shape=[self.config.vocab_size, self.config.embedding_size],
-          initializer=self.initializer)
-      # load custom word embedding
-      # embedding_map = np.load(self.config.word_embedding_file)
-      # embedding_map = tf.convert_to_tensor(embedding_map)
+      if self.custom_word_embedding: # load custom word embedding
+        embedding_map = np.load(self.config.word_embedding_file)
+        embedding_map = tf.convert_to_tensor(embedding_map)
+        tf.logging.info('loading cusotm word embedding......')
+      else:
+        embedding_map = tf.get_variable(
+            name="map",
+            shape=[self.config.vocab_size, self.config.embedding_size],
+            initializer=self.initializer)
       seq_embeddings = tf.nn.embedding_lookup(embedding_map, self.input_seqs)
-
     self.seq_embeddings = seq_embeddings
 
 
