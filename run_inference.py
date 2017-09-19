@@ -18,7 +18,7 @@ r"""Generate captions for images using default beam search parameters."""
 import math
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
-os.environ["CUDA_VISIBLE_DEVICES"] = '1' # use the second GPU
+os.environ["CUDA_VISIBLE_DEVICES"] = '1' # decide to use CPU or GPU
 
 import tensorflow as tf
 

@@ -2,7 +2,7 @@
 # @Author: lc
 # @Date:   2017-09-17 00:22:17
 # @Last Modified by:   WuLC
-# @Last Modified time: 2017-09-19 15:35:41
+# @Last Modified time: 2017-09-19 16:23:17
 
 import sys
 import math
@@ -10,7 +10,7 @@ import time
 import hashlib
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
-os.environ["CUDA_VISIBLE_DEVICES"] = '1' # decide to use CPU or GPU
+os.environ["CUDA_VISIBLE_DEVICES"] = '0' # decide to use CPU or GPU
 from datetime import datetime
 import glob
 import logging

@@ -101,4 +101,4 @@ class TrainingConfig(object):
     self.clip_gradients = 5.0
 
     # How many model checkpoints to keep.
-    self.max_checkpoints_to_keep = 50
+    self.max_checkpoints_to_keep = 200

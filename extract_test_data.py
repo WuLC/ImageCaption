@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
 # @Author: lc
 # @Date:   2017-09-17 11:31:14
-# @Last Modified by:   lc
-# @Last Modified time: 2017-09-18 12:24:11
+# @Last Modified by:   WuLC
+# @Last Modified time: 2017-09-19 15:50:06
+
+# extract images for testing from validation set
+# account for 5% of the validation images
+# need to run with python2
 
 import sys
 import hashlib
@@ -28,7 +32,7 @@ def extract_test_data(val_img_dir, val_caption_file, test_img_dir, test_caption_
     for item in data[int(len(data) * train_percentage):]:
         filename = item['image_id'].split('.')[0]
         # copy validation images to another dir
-        #copyfile(val_img_dir + filename + '.png', test_img_dir + filename + '.png')
+        copyfile(val_img_dir + filename + '.png', test_img_dir + filename + '.png')
         captions = item['caption']
         image_id = int(int(hashlib.sha256(filename.encode('utf8')).hexdigest(), 16) % sys.maxint)
         for c in captions:

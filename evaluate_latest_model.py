@@ -36,8 +36,8 @@ import show_and_tell_model
 
 val_img_dir = '../data/aichallenge/TFRecordFile/'
 input_file_pattern = val_img_dir + 'val-?????-of-00005'
-checkpoint_dir = '../aichallenge_model_inception/train/'
-eval_dir = '../aichallenge_model_inception/val/'
+checkpoint_dir = '../aichallenge_model_inception_with_custom_embedding/train/'
+eval_dir = '../aichallenge_model_inception_with_custom_embedding/val/'
 
 FLAGS = tf.flags.FLAGS
 
