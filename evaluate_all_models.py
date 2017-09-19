@@ -20,11 +20,11 @@ in TensorBoard.
 """
 
 import os 
-os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
-os.environ["CUDA_VISIBLE_DEVICES"] = '1' # use the second GPU
-
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+os.environ["CUDA_VISIBLE_DEVICES"] = '1' # decide to use the CPU or GPU
 import math
 import time
+import glob
 
 import numpy as np
 import tensorflow as tf
@@ -119,42 +119,44 @@ def run_once(model, saver, summary_writer, summary_op):
     summary_writer: Instance of FileWriter.
     summary_op: Op for generating model summaries.
   """
-  model_path = tf.train.latest_checkpoint(FLAGS.checkpoint_dir)
-  if not model_path:
-    tf.logging.info("Skipping evaluation. No checkpoint found in: %s",
-                    FLAGS.checkpoint_dir)
-    return
-
-  with tf.Session() as sess:
-    # Load model from checkpoint.
-    tf.logging.info("Loading model from checkpoint: %s", model_path)
-    saver.restore(sess, model_path)
-    global_step = tf.train.global_step(sess, model.global_step.name)
-    tf.logging.info("Successfully loaded %s at global step = %d.",
-                    os.path.basename(model_path), global_step)
-    if global_step < FLAGS.min_global_step:
-      tf.logging.info("Skipping evaluation. Global step = %d < %d", global_step,
-                      FLAGS.min_global_step)
+  for path in glob.glob(FLAGS.checkpoint_dir + '*.meta'):
+    model_path = path.replace('\\', '/').rstrip('.meta')
+    # model_path = tf.train.latest_checkpoint(FLAGS.checkpoint_dir)
+    if not model_path:
+      tf.logging.info("Skipping evaluation. No checkpoint found in: %s",
+                      FLAGS.checkpoint_dir)
       return
 
-    # Start the queue runners.
-    coord = tf.train.Coordinator()
-    threads = tf.train.start_queue_runners(coord=coord)
+    with tf.Session() as sess:
+      # Load model from checkpoint.
+      tf.logging.info("Loading model from checkpoint: %s", model_path)
+      saver.restore(sess, model_path)
+      global_step = tf.train.global_step(sess, model.global_step.name)
+      tf.logging.info("Successfully loaded %s at global step = %d.",
+                      os.path.basename(model_path), global_step)
+      if global_step < FLAGS.min_global_step:
+        tf.logging.info("Skipping evaluation. Global step = %d < %d", global_step,
+                        FLAGS.min_global_step)
+        return
 
-    # Run evaluation on the latest checkpoint.
-    try:
-      evaluate_model(
-          sess=sess,
-          model=model,
-          global_step=global_step,
-          summary_writer=summary_writer,
-          summary_op=summary_op)
-    except Exception as e:  # pylint: disable=broad-except
-      tf.logging.error("Evaluation failed.")
-      coord.request_stop(e)
+      # Start the queue runners.
+      coord = tf.train.Coordinator()
+      threads = tf.train.start_queue_runners(coord=coord)
 
-    coord.request_stop()
-    coord.join(threads, stop_grace_period_secs=10)
+      # Run evaluation on the latest checkpoint.
+      try:
+        evaluate_model(
+            sess=sess,
+            model=model,
+            global_step=global_step,
+            summary_writer=summary_writer,
+            summary_op=summary_op)
+      except Exception as e:  # pylint: disable=broad-except
+        tf.logging.error("Evaluation failed.")
+        coord.request_stop(e)
+
+      coord.request_stop()
+      coord.join(threads, stop_grace_period_secs=10)
 
 
 def run():
