@@ -222,9 +222,9 @@ class ShowAndTellModel(object):
     """
     with tf.variable_scope("seq_embedding"), tf.device("/cpu:0"):
       if self.custom_word_embedding: # load custom word embedding
-        embedding_map = np.load(self.config.word_embedding_file)
-        embedding_map = tf.convert_to_tensor(embedding_map)
-        tf.logging.info('loading cusotm word embedding......')
+        numpy_embedding_map = np.load(self.config.word_embedding_file)
+        embedding_map = tf.get_variable(name = "map", initializer = tf.constant(numpy_embedding_map))
+        tf.logging.info('loading custom word embedding......')
       else:
         embedding_map = tf.get_variable(
             name="map",
