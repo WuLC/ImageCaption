@@ -8,7 +8,7 @@ import sys
 import time
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
-os.environ["CUDA_VISIBLE_DEVICES"] = '1' # decide to use CPU or GPU
+os.environ["CUDA_VISIBLE_DEVICES"] = '0' # decide to use CPU or GPU
 from datetime import datetime
 import glob
 import logging

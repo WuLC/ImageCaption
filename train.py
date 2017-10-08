@@ -27,12 +27,12 @@ import show_and_tell_model
 train_img_dir = '../data/aichallenge/TFRecordFile/'
 input_file_pattern = train_img_dir + 'train-?????-of-00795'
 inception_checkpoint_file = '../pretrained_models/inception_v3.ckpt'
-# trained_models_dir = '../aichallenge_model_inception/train/'
-trained_models_dir = '../aichallenge_model_inception_with_custom_embedding/train/'
+trained_models_dir = '../aichallenge_model_inception/train/'
+# trained_models_dir = '../aichallenge_model_inception_with_custom_embedding/train/'
 word_embedding_file = '../aichallenge_model_inception_with_custom_embedding/word_vector.npy'
-custom_word_embedding = True
-train_inception = False
-num_steps = 1500000
+custom_word_embedding = False
+train_inception = True
+num_steps = 2000000
 
 FLAGS = tf.app.flags.FLAGS
 

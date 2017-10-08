@@ -21,7 +21,7 @@ in TensorBoard.
 
 import os 
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
-os.environ["CUDA_VISIBLE_DEVICES"] = '2' # decide to use the CPU or GPU
+os.environ["CUDA_VISIBLE_DEVICES"] = '1' # decide to use the CPU or GPU
 
 import math
 import os.path
@@ -36,7 +36,8 @@ import show_and_tell_model
 
 val_img_dir = '../data/aichallenge/TFRecordFile/'
 input_file_pattern = val_img_dir + 'val-?????-of-00005'
-checkpoint_dir = '../aichallenge_model_inception_with_custom_embedding/train/'
+checkpoint_dir = '../aichallenge_model_inception/train/'
+# checkpoint_dir = '../aichallenge_model_inception_with_custom_embedding/train/'
 eval_dir = '../aichallenge_model_inception_with_custom_embedding/val/'
 
 FLAGS = tf.flags.FLAGS

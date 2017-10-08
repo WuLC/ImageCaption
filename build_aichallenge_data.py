@@ -107,7 +107,8 @@ train_shards = 795
 val_shards = 5
 test_shards = 8
 min_word_count = 5
-num_threads = 15
+# num_threads = 15
+num_threads = 5
 
 tf.flags.DEFINE_string("train_image_dir", train_image_dir,
                        "Training image directory.")

@@ -41,8 +41,8 @@ def main(_):
     filenames = [f for f in os.listdir(FLAGS.test_img_dir) if f.endswith('png')]
     print('There are totally {0} images.....'.format(len(filenames)))
 
-    # with embedding:  result_model.ckpt-487261.json
-    checkpoint_file = FLAGS.checkpoint_path + 'model.ckpt-487261' #'model.ckpt-1188726'
+    # with embedding:  result_model.ckpt-549482.json
+    checkpoint_file = FLAGS.checkpoint_path + 'model.ckpt-549482' #'model.ckpt-1188726'
     submit_json_file = '{0}submit_{1}_custom_embedding.json'.format(FLAGS.submit_json_dir, checkpoint_file.split('/')[-1])
   
 
