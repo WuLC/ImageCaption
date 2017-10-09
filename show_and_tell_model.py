@@ -220,13 +220,14 @@ class ShowAndTellModel(object):
                 numpy_embedding_map = np.load(self.config.word_embedding_file)
                 word_num, embedding_len = numpy_embedding_map.shape
                 if self.config.vocab_size < word_num:
-                    tf.logging.info('the size of custom word embedding is larger than the configure')
+                    tf.logging.info(
+                        'the size of custom word embedding is larger than the configure')
                     exit()
-                elif self.config.vocab_size > word_num: # supplement the number of words in the file to a self.config.vocab_size
-                    numpy_embedding_map = np.concatenate((numpy_embedding_map,
-                                                          np.random.normal(size = (self.config.vocab_size - word_num, embedding_len))))
+                elif self.config.vocab_size > word_num:
+                    numpy_embedding_map = np.concatenate((numpy_embedding_map,\
+                    np.random.normal(size = (self.config.vocab_size - word_num, embedding_len)))).astype('float32')
                 embedding_map = tf.get_variable(
-                    name="map", initializer=tf.constant_initializer(numpy_embedding_map))
+                    name="map", initializer=tf.constant(numpy_embedding_map))
                 tf.logging.info('loading custom word embedding......')
             else:
                 embedding_map = tf.get_variable(
