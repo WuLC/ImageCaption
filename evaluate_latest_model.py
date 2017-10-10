@@ -21,11 +21,11 @@ in TensorBoard.
 
 import os 
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
-os.environ["CUDA_VISIBLE_DEVICES"] = '1' # decide to use the CPU or GPU
+os.environ["CUDA_VISIBLE_DEVICES"] = '0' # decide to use the CPU or GPU
 
 import math
-import os.path
 import time
+import logging
 
 import numpy as np
 import tensorflow as tf
@@ -36,9 +36,13 @@ import show_and_tell_model
 
 val_img_dir = '../data/aichallenge/TFRecordFile/'
 input_file_pattern = val_img_dir + 'val-?????-of-00005'
-checkpoint_dir = '../aichallenge_model_inception/train/'
-# checkpoint_dir = '../aichallenge_model_inception_with_custom_embedding/train/'
+# checkpoint_dir = '../aichallenge_model_inception/train/'
+checkpoint_dir = '../aichallenge_model_inception_with_custom_embedding/train/'
+# eval_dir = '../aichallenge_model_inception/val/'
 eval_dir = '../aichallenge_model_inception_with_custom_embedding/val/'
+# eval_log_file = './logs/eval.log'
+eval_log_file = './logs/eval_custom_word_embedding.log'
+logging.basicConfig(level=logging.DEBUG, filename = eval_log_file, filemode="a+", format="%(asctime)-15s %(levelname)-8s  %(message)s")
 
 FLAGS = tf.flags.FLAGS
 
@@ -48,7 +52,7 @@ tf.flags.DEFINE_string("checkpoint_dir", checkpoint_dir,
                        "Directory containing model checkpoints.")
 tf.flags.DEFINE_string("eval_dir", eval_dir, "Directory to write event logs.")
 
-tf.flags.DEFINE_integer("eval_interval_secs", 0,
+tf.flags.DEFINE_integer("eval_interval_secs", 300,
                         "Interval between evaluation runs.")
 tf.flags.DEFINE_integer("num_eval_examples", 7500,
                         "Number of examples for evaluation.")
@@ -56,7 +60,6 @@ tf.flags.DEFINE_integer("num_eval_examples", 7500,
 tf.flags.DEFINE_integer("min_global_step", 5000,
                         "Minimum global step to run evaluation.")
 
-tf.logging.set_verbosity(tf.logging.INFO)
 
 
 def evaluate_model(sess, model, global_step, summary_writer, summary_op):
@@ -90,14 +93,14 @@ def evaluate_model(sess, model, global_step, summary_writer, summary_op):
     sum_losses += np.sum(cross_entropy_losses * weights)
     sum_weights += np.sum(weights)
     if not i % 100:
-      tf.logging.info("Computed losses for %d of %d batches.", i + 1,
+      logging.info("Computed losses for %d of %d batches.", i + 1,
                       num_eval_batches)
   eval_time = time.time() - start_time
 
   perplexity = math.exp(sum_losses / sum_weights)
-  tf.logging.info("Losses sum = %f (%.2g sec)", sum_losses, eval_time)
-  tf.logging.info("Weights sum = %f (%.2g sec)", sum_weights, eval_time)
-  tf.logging.info("Perplexity = %f (%.2g sec)", perplexity, eval_time)
+  logging.info("Losses sum = %f (%.2g sec)", sum_losses, eval_time)
+  logging.info("Weights sum = %f (%.2g sec)", sum_weights, eval_time)
+  logging.info("Perplexity = %f (%.2g sec)", perplexity, eval_time)
 
   # Log perplexity to the FileWriter.
   summary = tf.Summary()
@@ -108,7 +111,7 @@ def evaluate_model(sess, model, global_step, summary_writer, summary_op):
 
   # Write the Events file to the eval directory.
   summary_writer.flush()
-  tf.logging.info("Finished processing evaluation at global step %d.",
+  logging.info("Finished processing evaluation at global step %d.\n",
                   global_step)
 
 
@@ -123,19 +126,19 @@ def run_once(model, saver, summary_writer, summary_op):
   """
   model_path = tf.train.latest_checkpoint(FLAGS.checkpoint_dir)
   if not model_path:
-    tf.logging.info("Skipping evaluation. No checkpoint found in: %s",
+    logging.info("Skipping evaluation. No checkpoint found in: %s",
                     FLAGS.checkpoint_dir)
     return
 
   with tf.Session() as sess:
     # Load model from checkpoint.
-    tf.logging.info("Loading model from checkpoint: %s", model_path)
+    logging.info("Loading model from checkpoint: %s", model_path)
     saver.restore(sess, model_path)
     global_step = tf.train.global_step(sess, model.global_step.name)
-    tf.logging.info("Successfully loaded %s at global step = %d.",
+    logging.info("Successfully loaded %s at global step = %d.",
                     os.path.basename(model_path), global_step)
     if global_step < FLAGS.min_global_step:
-      tf.logging.info("Skipping evaluation. Global step = %d < %d", global_step,
+      logging.info("Skipping evaluation. Global step = %d < %d", global_step,
                       FLAGS.min_global_step)
       return
 
@@ -164,7 +167,7 @@ def run():
   # Create the evaluation directory if it doesn't exist.
   eval_dir = FLAGS.eval_dir
   if not tf.gfile.IsDirectory(eval_dir):
-    tf.logging.info("Creating eval directory: %s", eval_dir)
+    logging.info("Creating eval directory: %s", eval_dir)
     tf.gfile.MakeDirs(eval_dir)
 
   g = tf.Graph()
@@ -187,7 +190,7 @@ def run():
     # Run a new evaluation run every eval_interval_secs.
     while True:
       start = time.time()
-      tf.logging.info("Starting evaluation at " + time.strftime(
+      logging.info("Starting evaluation at " + time.strftime(
           "%Y-%m-%d-%H:%M:%S", time.localtime()))
       run_once(model, saver, summary_writer, summary_op)
       time_to_next_eval = start + FLAGS.eval_interval_secs - time.time()
