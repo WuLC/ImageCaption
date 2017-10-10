@@ -34,48 +34,28 @@ def compute_m1(json_predictions_file, reference_file):
     coco = COCO(reference_file)
     print('=======loading reference_file successfully')
     coco_res = coco.loadRes(json_predictions_file)
-    print('=======loading json_predictions_file successfully')
+    print('=======loading json_prediction_file successfully')
     # create coco_eval object.
     coco_eval = COCOEvalCap(coco, coco_res)
 
     # evaluate results
     coco_eval.evaluate()
 
+    # print output evaluation scores
     for metric, score in coco_eval.eval.items():
         print '%s: %.3f'%(metric, score)
         m1_score[metric] = score
-
     return m1_score
 
 
 def get_judge_score(json_predictions_file, reference_file):
     scores = compute_m1(json_predictions_file, reference_file)
-    judge_score = (scores['Bleu_4'] + scores['METEOR'] + scores['ROUGE_L'] + scores['CIDEr'])/4.0
-    print("judging score: {0}".format(judge_score))
-    return judge_score
+    #judge_score = (scores['Bleu_4'] + scores['METEOR'] + scores['ROUGE_L'] + scores['CIDEr'])/4.0
+    #print("judging score: {0}".format(judge_score))
+    #return judge_score
 
-
-def main():
-    """The evaluator."""
-    """
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-submit", "--submit", type=str, required=True,
-                        help=' JSON containing submit sentences.')
-    parser.add_argument("-ref", "--ref", type=str,
-                        help=' JSON references.')
-    args = parser.parse_args()
-
-    json_predictions_file = args.submit
-    reference_file = args.ref
-    """
-    json_predictions_file = './data/id_to_test_caption.json'
-    reference_file = './data/id_to_words.json'
-    json_predictions_file = '../../data/aichallenge/result/result20170918143536.json'
-    reference_file = '../../data/aichallenge/annotations/captions_7500test.json'
-
-    scores = compute_m1(json_predictions_file, reference_file)
-    judge_score = (scores['Bleu_4'] + scores['METEOR'] + scores['ROUGE_L'] + scores['CIDEr'])/4.0
-    print("judging score: {0}".format(judge_score))
 
 if __name__ == "__main__":
-    main()
+    json_predictions_file = '../../data/aichallenge/result/result_model.ckpt-1257469.json'
+    reference_file = '../../data/aichallenge/annotations/captions_7500test.json'
+    get_judge_score(json_predictions_file, reference_file)

@@ -76,6 +76,7 @@ class COCO:
         self.catToImgs = {}
         self.imgs = []
         self.cats = []
+        self.image2hash = {}
         if not annotation_file == None:
             print('loading annotations into memory...')
             time_t = datetime.datetime.utcnow()
@@ -96,8 +97,15 @@ class COCO:
 
             anns[ann['id']] = ann
         imgs      = {im['id']: {} for im in self.dataset['images']}
+        image2hash = {}
         for img in self.dataset['images']:
             imgs[img['id']] = img
+            if img['file_name'] in image2hash:
+                assert image2hash[img['file_name']] == img['id']
+            else:
+                image2hash[img['file_name']] = img['id']
+        self.image2hash = image2hash
+
 
         cats = []
         catToImgs = []
@@ -285,7 +293,8 @@ class COCO:
         # str to hex int for image_id
         imgdict = {}
         def get_image_dict(img_name):
-            image_hash = int(int(hashlib.sha256(img_name).hexdigest(), 16) % sys.maxint)
+            # image_hash = int(int(hashlib.sha256(img_name).hexdigest(), 16) % sys.maxint)
+            image_hash = self.image2hash[img_name]
             if image_hash in imgdict:
                 assert imgdict[image_hash] == img_name, 'hash colision: {0}: {1}'.format(image_hash, img_name)
             else:
@@ -300,9 +309,11 @@ class COCO:
                           }
             return image_hash
 
+
         print ('Loading and preparing results...     ')
         time_t = datetime.datetime.utcnow()
         anns    = json.load(open(resFile))
+
         assert type(anns) == list, 'results in not an array of objects'
 
         # annsImgIds = [ann['image_id'] for ann in anns]
@@ -320,7 +331,7 @@ class COCO:
 
 
         assert set(annsImgIds) == (set(annsImgIds) & set(self.getImgIds())), \
-               'Results do not correspond to current data set'
+               'Results do not correspond to current coco set'
         if 'caption' in anns[0]:
             imgIds = set([img['id'] for img in res.dataset['images']]) & set([ann['image_id'] for ann in anns])
             res.dataset['images'] = [img for img in res.dataset['images'] if img['id'] in imgIds]
