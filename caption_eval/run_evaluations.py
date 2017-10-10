@@ -50,12 +50,12 @@ def compute_m1(json_predictions_file, reference_file):
 
 def get_judge_score(json_predictions_file, reference_file):
     scores = compute_m1(json_predictions_file, reference_file)
-    #judge_score = (scores['Bleu_4'] + scores['METEOR'] + scores['ROUGE_L'] + scores['CIDEr'])/4.0
-    #print("judging score: {0}".format(judge_score))
-    #return judge_score
+    judge_score = (scores['Bleu_4'] + scores['METEOR'] + scores['ROUGE_L'] + scores['CIDEr'])/4.0
+    print("judging score: {0}".format(judge_score))
+    return judge_score
 
 
 if __name__ == "__main__":
-    json_predictions_file = '../../data/aichallenge/result/result_model.ckpt-1257469.json'
+    json_predictions_file = '../../data/aichallenge/result/result_model.ckpt-1202581.json'
     reference_file = '../../data/aichallenge/annotations/captions_7500test.json'
     get_judge_score(json_predictions_file, reference_file)

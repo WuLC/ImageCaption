@@ -8,26 +8,49 @@
 # requires python2
 
 import os
+import logging
 
 import numpy as np
 import matplotlib.pyplot as plt
 
-from caption_eval.run_evaluations import get_judge_score
+from caption_eval.run_evaluations import compute_m1
 
-def get_batch_judge_score(reference_file, result_dir):
+log_file = './logs/prediction_json_scores.log'
+logging.basicConfig(level=logging.INFO, filename = log_file, filemode="a+", format="%(asctime)-15s %(levelname)-8s  %(message)s")
+
+
+def get_batch_final_score(reference_file, result_dir):
     files = sorted(os.listdir(result_dir))
-    scores = [get_judge_score(result_dir + f, reference_file) for f in files]
-    
-    np.savetxt('../data/aichallenge/scores/scores_custom_embedding.dat', np.array(scores))
+    print('totally {0} result json files'.format(len(files)))
+    final_scores = []
+    for f in files:
+        score = compute_m1(result_dir + f, reference_file)
+        final_score = (score['Bleu_4'] + score['CIDEr'] + score['METEOR'] + score['ROUGE_L'])/4.0
+        final_scores.append(final_score)
+        logging.info('{0} steps, final_score {1:.5f} {2:.5f} {3:.5f} {4:.5f} {5:.5f}'.format(
+                     f.split('-')[1].rstrip('.json'),
+                     final_score,
+                     score['Bleu_4'],
+                     score['CIDEr'],
+                     score['METEOR'],
+                     score['ROUGE_L']))
+    np.savetxt('../data/aichallenge/scores/scores.dat', np.array(final_scores))
     # draw and save image
     fig = plt.figure()
-    plt.plot(scores)
-    fig.savefig('../data/aichallenge/scores/scores_custom_embedding.png')
+    plt.plot(final_scores)
+    fig.savefig('../data/aichallenge/scores/scores.png')
 
-    print('max score was achieved by file: {0}'.format(files[scores.index(max(scores))]))
+    print('max score {0} was achieved by file: {1}'.format(
+          max(final_scores),
+          files[final_scores.index(max(final_scores))]))
 
 
 if __name__ == '__main__':
     reference_file = '../data/aichallenge/annotations/captions_7500test.json'
-    result_dir = '../data/aichallenge/result_custom_embedding/'
-    get_batch_judge_score(reference_file, result_dir)
+    result_dir = '../data/aichallenge/result/'
+    get_batch_final_score(reference_file, result_dir)
+    """
+    predict_result = result_dir + 'result_model.ckpt-1202581.json'
+    score = get_final_score(predict_result, reference_file)
+    print(score)
+    """
