@@ -34,19 +34,21 @@ class ShowAndTellModel(object):
     Oriol Vinyals, Alexander Toshev, Samy Bengio, Dumitru Erhan
     """
 
-    def __init__(self, config, mode, train_inception=False, train_vgg = False, custom_word_embedding=False):
+    def __init__(self, config, mode, cnn_model = None, train_cnn_model=False, custom_word_embedding=False):
         """Basic setup.
 
         Args:
           config: Object containing configuration parameters.
           mode: "train", "eval" or "inference".
-          train_inception: Whether the inception submodel variables are trainable.
+          cnn_model: types of cnn models
+          train_cnn_model: Whether the cnn submodel variables are trainable.
+          custom_word_embedding: whether to use pretrained word embedding
         """
         assert mode in ["train", "eval", "inference"]
         self.config = config
         self.mode = mode
-        self.train_inception = train_inception
-        self.train_vgg = train_vgg
+        self.cnn_model = cnn_model
+        self.train_cnn_model = train_cnn_model
         self.custom_word_embedding = custom_word_embedding
 
         # Reader for the input data.
@@ -85,7 +87,7 @@ class ShowAndTellModel(object):
         # A float32 Tensor with shape [batch_size * padded_length].
         self.target_cross_entropy_loss_weights = None
 
-        # Collection of variables from the inception submodel.
+        # Collection of variables from the cnn submodel.
         self.inception_variables = []
         self.vgg19_variables = []
 
@@ -187,25 +189,29 @@ class ShowAndTellModel(object):
           self.image_embeddings
         """
         
-        # image embedding by inception_v3
-        # inception_output = image_embedding.inception_v3(
-        #     self.images,
-        #     trainable=self.train_inception,
-        #     is_training=self.is_training())
-        # self.inception_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope="InceptionV3")
-        
-        # image embedding by vgg19
-        vgg_output = image_embedding.vgg_19(
-            self.images,
-            trainable=self.train_vgg,
-            is_training=self.is_training())
-        self.vgg19_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope="vgg_19")
+        if self.cnn_model == 'InceptionV3':
+            # image embedding by inception_v3
+            cnn_output = image_embedding.inception_v3(
+                self.images,
+                trainable=self.train_cnn_model,
+                is_training=self.is_training())
+            self.inception_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope="InceptionV3")
+        elif self.cnn_model == 'VGG19':
+            # image embedding by vgg19
+            cnn_output = image_embedding.vgg_19(
+                self.images,
+                trainable=self.train_cnn_model,
+                is_training=self.is_training())
+            self.vgg19_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope="vgg_19")
+        else:
+            print('unknown cnn model {0} for image embedding'.format(self.cnn_model))
+            exit(0)
         
         # Map inception/vgg output into embedding space.
         with tf.variable_scope("image_embedding") as scope:
             image_embeddings = tf.contrib.layers.fully_connected(
                 # inputs=inception_output, 
-                inputs=vgg_output,
+                inputs=cnn_output,
                 num_outputs=self.config.embedding_size,
                 activation_fn=None,
                 weights_initializer=self.initializer,
@@ -392,6 +398,11 @@ class ShowAndTellModel(object):
         self.build_image_embeddings()
         self.build_seq_embeddings()
         self.build_model()
-        # self.setup_inception_initializer()
-        self.setup_vgg19_initializer()
+        if self.cnn_model == 'InceptionV3':
+            self.setup_inception_initializer()
+        elif self.cnn_model == 'VGG19':
+            self.setup_vgg19_initializer()
+        else:
+            print('unknown cnn model {0}'.format(self.cnn_model))
+            exit(0)
         self.setup_global_step()

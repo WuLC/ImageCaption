@@ -28,33 +28,31 @@ train_img_dir = '../data/aichallenge/TFRecordFile/'
 input_file_pattern = train_img_dir + 'train-?????-of-00795'
 inception_checkpoint_file = '../pretrained_models/inception_v3.ckpt'
 vgg19_checkpoint_file = '../pretrained_models/vgg_19.ckpt'
-# trained_models_dir = '../aichallenge_model_inception/train/'
+inception_trained_models_dir = '../aichallenge_model_inception/train/'
+vgg_trained_models_dir = '../aichallenge_model_vgg/train/'
 # trained_models_dir = '../aichallenge_model_inception_with_custom_embedding/train/'
-trained_models_dir = '../aichallenge_model_vgg/train/'
 word_embedding_file = '../data/aichallenge/word_embedding/word_embedding.npy'
+cnn_model = 'InceptionV3' # VGG19
 custom_word_embedding = False
-train_inception = False
-train_vgg = False
+train_cnn_model = False
 num_steps = 2000000
 
 FLAGS = tf.app.flags.FLAGS
 
 tf.flags.DEFINE_string("input_file_pattern", input_file_pattern,
-                       "File pattern of sharded TFRecord input files.")
+                       "File pattern of sharded TFRecord input files.")             
+tf.flags.DEFINE_string("cnn_model", cnn_model,
+                       "choose which cnn model to use for image embedding, (currently InceptionV3 and VGG19 are available)")
+tf.flags.DEFINE_boolean("train_cnn_model", train_cnn_model,
+                        "Whether to train cnn submodel variables or not")
 tf.flags.DEFINE_string("inception_checkpoint_file", inception_checkpoint_file,
                        "Path to a pretrained inception_v3 model.")
 tf.flags.DEFINE_string("vgg19_checkpoint_file", vgg19_checkpoint_file,
-                       "Path to a pretrained vgg_19 model.")                     
-tf.flags.DEFINE_string("trained_models_dir", trained_models_dir,
-                       "Directory for saving and loading model checkpoints.")
-tf.flags.DEFINE_string("word_embedding_file", word_embedding_file,
-                       "word embedding of words in the vocabulary obtained by word2vec")
-tf.flags.DEFINE_string("custom_word_embedding", custom_word_embedding,
+                       "Path to a pretrained vgg19 model.")
+tf.flags.DEFINE_boolean("custom_word_embedding", custom_word_embedding,
                        "Whether to use the word embedding file")
-tf.flags.DEFINE_boolean("train_inception", train_inception,
-                        "Whether to train inception submodel variables.")
-tf.flags.DEFINE_boolean("train_vgg", train_vgg,
-                        "Whether to train vgg submodel variables.")
+tf.flags.DEFINE_string("word_embedding_file", word_embedding_file,
+                       "path of word embedding of words in the vocabulary trained with word2vec")
 tf.flags.DEFINE_integer("number_of_steps", num_steps,
                         "Number of training steps.")
 tf.flags.DEFINE_integer("log_every_n_steps", 50,
@@ -71,8 +69,14 @@ def main(unused_argv):
     model_config.word_embedding_file = FLAGS.word_embedding_file
     training_config = configuration.TrainingConfig()
 
-    # Create training directory.
-    trained_models_dir = FLAGS.trained_models_dir
+    
+    if cnn_model == 'InceptionV3':
+        trained_models_dir = inception_trained_models_dir
+    elif cnn_model == 'VGG19':
+        trained_models_dir = vgg_trained_models_dir
+    else:
+        print('Unknown cnn model {0}'.format(cnn_model))
+        exit(0)
     if not tf.gfile.IsDirectory(trained_models_dir):
         tf.logging.info("Creating training directory: %s", trained_models_dir)
         tf.gfile.MakeDirs(trained_models_dir)
@@ -84,14 +88,14 @@ def main(unused_argv):
         model = show_and_tell_model.ShowAndTellModel(
             model_config,
             mode="train",
-            train_inception=FLAGS.train_inception,
-            train_vgg = FLAGS.train_vgg,
+            cnn_model = FLAGS.cnn_model,
+            train_cnn_model=FLAGS.train_cnn_model,
             custom_word_embedding=FLAGS.custom_word_embedding)
         model.build()
 
         # Set up the learning rate.
         learning_rate_decay_fn = None
-        if FLAGS.train_inception or FLAGS.train_vgg:
+        if FLAGS.train_cnn_model:
             learning_rate = tf.constant(
                 training_config.train_inception_learning_rate)
         else:
