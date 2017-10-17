@@ -27,11 +27,14 @@ import show_and_tell_model
 train_img_dir = '../data/aichallenge/TFRecordFile/'
 input_file_pattern = train_img_dir + 'train-?????-of-00795'
 inception_checkpoint_file = '../pretrained_models/inception_v3.ckpt'
-trained_models_dir = '../aichallenge_model_inception/train/'
+vgg19_checkpoint_file = '../pretrained_models/vgg_19.ckpt'
+# trained_models_dir = '../aichallenge_model_inception/train/'
 # trained_models_dir = '../aichallenge_model_inception_with_custom_embedding/train/'
-word_embedding_file = '../aichallenge_model_inception_with_custom_embedding/word_vector.npy'
+trained_models_dir = '../aichallenge_model_vgg/train/'
+word_embedding_file = '../data/aichallenge/word_embedding/word_embedding.npy'
 custom_word_embedding = False
-train_inception = True
+train_inception = False
+train_vgg = False
 num_steps = 2000000
 
 FLAGS = tf.app.flags.FLAGS
@@ -40,6 +43,8 @@ tf.flags.DEFINE_string("input_file_pattern", input_file_pattern,
                        "File pattern of sharded TFRecord input files.")
 tf.flags.DEFINE_string("inception_checkpoint_file", inception_checkpoint_file,
                        "Path to a pretrained inception_v3 model.")
+tf.flags.DEFINE_string("vgg19_checkpoint_file", vgg19_checkpoint_file,
+                       "Path to a pretrained vgg_19 model.")                     
 tf.flags.DEFINE_string("trained_models_dir", trained_models_dir,
                        "Directory for saving and loading model checkpoints.")
 tf.flags.DEFINE_string("word_embedding_file", word_embedding_file,
@@ -48,6 +53,8 @@ tf.flags.DEFINE_string("custom_word_embedding", custom_word_embedding,
                        "Whether to use the word embedding file")
 tf.flags.DEFINE_boolean("train_inception", train_inception,
                         "Whether to train inception submodel variables.")
+tf.flags.DEFINE_boolean("train_vgg", train_vgg,
+                        "Whether to train vgg submodel variables.")
 tf.flags.DEFINE_integer("number_of_steps", num_steps,
                         "Number of training steps.")
 tf.flags.DEFINE_integer("log_every_n_steps", 50,
@@ -60,6 +67,7 @@ def main(unused_argv):
     model_config = configuration.ModelConfig()
     model_config.input_file_pattern = FLAGS.input_file_pattern
     model_config.inception_checkpoint_file = FLAGS.inception_checkpoint_file
+    model_config.vgg19_checkpoint_file = FLAGS.vgg19_checkpoint_file
     model_config.word_embedding_file = FLAGS.word_embedding_file
     training_config = configuration.TrainingConfig()
 
@@ -77,21 +85,20 @@ def main(unused_argv):
             model_config,
             mode="train",
             train_inception=FLAGS.train_inception,
+            train_vgg = FLAGS.train_vgg,
             custom_word_embedding=FLAGS.custom_word_embedding)
         model.build()
 
         # Set up the learning rate.
         learning_rate_decay_fn = None
-        if FLAGS.train_inception:
+        if FLAGS.train_inception or FLAGS.train_vgg:
             learning_rate = tf.constant(
                 training_config.train_inception_learning_rate)
         else:
             learning_rate = tf.constant(training_config.initial_learning_rate)
             if training_config.learning_rate_decay_factor > 0:
-                num_batches_per_epoch = (training_config.num_examples_per_epoch /
-                                         model_config.batch_size)
-                decay_steps = int(num_batches_per_epoch *
-                                  training_config.num_epochs_per_decay)
+                num_batches_per_epoch = (training_config.num_examples_per_epoch / model_config.batch_size)
+                decay_steps = int(num_batches_per_epoch * training_config.num_epochs_per_decay)
 
                 def _learning_rate_decay_fn(learning_rate, global_step):
                     return tf.train.exponential_decay(
@@ -113,8 +120,7 @@ def main(unused_argv):
             learning_rate_decay_fn=learning_rate_decay_fn)
 
         # Set up the Saver for saving and restoring model checkpoints.
-        saver = tf.train.Saver(
-            max_to_keep=training_config.max_checkpoints_to_keep)
+        saver = tf.train.Saver(max_to_keep=training_config.max_checkpoints_to_keep)
 
     # Run training.
     tf.contrib.slim.learning.train(

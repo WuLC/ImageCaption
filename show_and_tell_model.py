@@ -34,7 +34,7 @@ class ShowAndTellModel(object):
     Oriol Vinyals, Alexander Toshev, Samy Bengio, Dumitru Erhan
     """
 
-    def __init__(self, config, mode, train_inception=False, custom_word_embedding=False):
+    def __init__(self, config, mode, train_inception=False, train_vgg = False, custom_word_embedding=False):
         """Basic setup.
 
         Args:
@@ -46,6 +46,7 @@ class ShowAndTellModel(object):
         self.config = config
         self.mode = mode
         self.train_inception = train_inception
+        self.train_vgg = train_vgg
         self.custom_word_embedding = custom_word_embedding
 
         # Reader for the input data.
@@ -86,8 +87,9 @@ class ShowAndTellModel(object):
 
         # Collection of variables from the inception submodel.
         self.inception_variables = []
+        self.vgg19_variables = []
 
-        # Function to restore the inception submodel from checkpoint.
+        # Function to restore the inception/vgg submodel from checkpoint.
         self.init_fn = None
 
         # Global step Tensor.
@@ -184,17 +186,26 @@ class ShowAndTellModel(object):
         Outputs:
           self.image_embeddings
         """
-        inception_output = image_embedding.inception_v3(
+        
+        # image embedding by inception_v3
+        # inception_output = image_embedding.inception_v3(
+        #     self.images,
+        #     trainable=self.train_inception,
+        #     is_training=self.is_training())
+        # self.inception_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope="InceptionV3")
+        
+        # image embedding by vgg19
+        vgg_output = image_embedding.vgg_19(
             self.images,
-            trainable=self.train_inception,
+            trainable=self.train_vgg,
             is_training=self.is_training())
-        self.inception_variables = tf.get_collection(
-            tf.GraphKeys.GLOBAL_VARIABLES, scope="InceptionV3")
-
-        # Map inception output into embedding space.
+        self.vgg19_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope="vgg_19")
+        
+        # Map inception/vgg output into embedding space.
         with tf.variable_scope("image_embedding") as scope:
             image_embeddings = tf.contrib.layers.fully_connected(
-                inputs=inception_output,
+                # inputs=inception_output, 
+                inputs=vgg_output,
                 num_outputs=self.config.embedding_size,
                 activation_fn=None,
                 weights_initializer=self.initializer,
@@ -352,6 +363,19 @@ class ShowAndTellModel(object):
 
             self.init_fn = restore_fn
 
+    def setup_vgg19_initializer(self):
+        """Sets up the function to restore vgg variables from checkpoint."""
+        if self.mode != "inference":
+            # Restore vgg variables only.
+            saver = tf.train.Saver(self.vgg19_variables)
+
+            def restore_fn(sess):
+                tf.logging.info("Restoring VGG19 variables from checkpoint file %s",
+                                self.config.vgg19_checkpoint_file)
+                saver.restore(sess, self.config.vgg19_checkpoint_file)
+
+            self.init_fn = restore_fn
+
     def setup_global_step(self):
         """Sets up the global step Tensor."""
         global_step = tf.Variable(
@@ -368,5 +392,6 @@ class ShowAndTellModel(object):
         self.build_image_embeddings()
         self.build_seq_embeddings()
         self.build_model()
-        self.setup_inception_initializer()
+        # self.setup_inception_initializer()
+        self.setup_vgg19_initializer()
         self.setup_global_step()
