@@ -2,7 +2,7 @@
 # @Author: lc
 # @Date:   2017-09-17 00:22:17
 # @Last Modified by:   LC
-# @Last Modified time: 2017-09-30 17:01:13
+# @Last Modified time: 2017-10-09 21:52:02
 
 import sys
 import time
@@ -22,19 +22,20 @@ import inference_wrapper
 from inference_utils import caption_generator
 from inference_utils import vocabulary
 
-
-checkpoint_path = '../aichallenge_model_inception/train/'
-checkpoint_path = '../aichallenge_model_inception_with_custom_embedding/train/'
+# checkpoint_dir = '../aichallenge_model_vgg/train/'
+checkpoint_dir = '../aichallenge_model_inception/train/'
+# checkpoint_dir = '../aichallenge_model_inception_with_custom_embedding/train/'
 vocab_file = '../data/aichallenge/TFRecordFile/word_counts.txt'
 test_img_dir = '../data/aichallenge/test1500png/'
-#test_img_dir = '../data/aichallenge/testsmall/'
-log_file = './logs/model_result_mapping.log'
-log_file = './logs/model_result_mapping_custom_embedding.log'
-result_json_dir = '../data/aichallenge/result/'
-result_json_dir = '../data/aichallenge/result_custom_embedding/'
+# log_file = './logs/vgg_model_result_mapping.log'
+log_file = './logs/inception_model_result_mapping.log'
+# log_file = './logs/inception_model_result_mapping_custom_embedding.log'
+# result_json_dir = '../data/aichallenge/vgg_result/'
+result_json_dir = '../data/aichallenge/inception_result/'
+# result_json_dir = '../data/aichallenge/inception_result_custom_embedding/'
 
 FLAGS = tf.flags.FLAGS
-tf.flags.DEFINE_string("checkpoint_path", checkpoint_path, 
+tf.flags.DEFINE_string("checkpoint_dir", checkpoint_dir, 
                        "Model checkpoint file or directory containing a model checkpoint file.")
 tf.flags.DEFINE_string("vocab_file", vocab_file, "Text file containing the vocabulary.")
 tf.flags.DEFINE_string("test_img_dir", test_img_dir, 
@@ -64,7 +65,7 @@ def get_evaluated_models(log_file):
                 evaluated_models.add('model.ckpt-'+m.group(2))
     return evaluated_models
 
-    
+
 def main(_):
     # Create the vocabulary.
     vocab = vocabulary.Vocabulary(FLAGS.vocab_file)
@@ -74,18 +75,26 @@ def main(_):
     # get evaluated models from log file
     evaluated_models = get_evaluated_models(FLAGS.log_file)
     
+    """
     # validate every checkpoint file in the checkpoint path
-    for path in glob.glob(FLAGS.checkpoint_path + '*.meta'):
+    for path in glob.glob(FLAGS.checkpoint_dir + '*.meta'):
         checkpoint_file = path.replace('\\', '/').rstrip('.meta')
+    """
+    models = []
+    if len(models) == 0:
+        # evaluate latest model
+        models.append(tf.train.latest_checkpoint(FLAGS.checkpoint_dir).split('/')[-1])
+    for model in models:
+        checkpoint_file = FLAGS.checkpoint_dir + model
         if checkpoint_file.split('/')[-1] in evaluated_models:
             print('model {0} has already bee evaluated successfully'.format(checkpoint_file))
             continue
-        result_json_file = '{0}result_{1}.json'.format(FLAGS.result_json_dir, checkpoint_file.split('/')[-1])
-        logging.info('mapping of model and result file, ({0}, {1})'.format(checkpoint_file.split('/')[-1], result_json_file.split('/')[-1]))
+        result_json_file = '{0}result_{1}.json'.format(FLAGS.result_json_dir, model)
+        logging.info('mapping of model and result file, ({0}, {1})'.format(model, result_json_file.split('/')[-1]))
         start_time = time.time()
         g = tf.Graph()
         with g.as_default():
-            model = inference_wrapper.InferenceWrapper()
+            model = inference_wrapper.InferenceWrapper(cnn_model = 'InceptionV3')
             restore_fn = model.build_graph_from_config(configuration.ModelConfig(), checkpoint_file)
         g.finalize()
 
