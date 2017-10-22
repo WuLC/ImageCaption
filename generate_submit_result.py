@@ -18,7 +18,8 @@ import inference_wrapper
 from inference_utils import caption_generator
 from inference_utils import vocabulary
 
-checkpoint_path = '../aichallenge_model_inception_with_custom_embedding/train/'
+# checkpoint_path = '../aichallenge_model_inception_with_custom_embedding/train/'
+checkpoint_path = '../aichallenge_model_inception/train/'
 vocab_file = '../data/aichallenge/TFRecordFile/word_counts.txt'
 test_img_dir = '../data/aichallenge/test20170923png/'
 submit_json_dir = '../data/aichallenge/submit/'
@@ -41,14 +42,13 @@ def main(_):
     filenames = [f for f in os.listdir(FLAGS.test_img_dir) if f.endswith('png')]
     print('There are totally {0} images.....'.format(len(filenames)))
 
-    # with embedding:  result_model.ckpt-549482.json
-    checkpoint_file = FLAGS.checkpoint_path + 'model.ckpt-549482' #'model.ckpt-1188726'
-    submit_json_file = '{0}submit_{1}_custom_embedding.json'.format(FLAGS.submit_json_dir, checkpoint_file.split('/')[-1])
+    checkpoint_file = FLAGS.checkpoint_path + 'model.ckpt-1783119'
+    submit_json_file = '{0}submit_{1}_inception.json'.format(FLAGS.submit_json_dir, checkpoint_file.split('/')[-1])
   
 
     g = tf.Graph()
     with g.as_default():
-        model = inference_wrapper.InferenceWrapper()
+        model = inference_wrapper.InferenceWrapper(cnn_model = 'InceptionV3')
         restore_fn = model.build_graph_from_config(configuration.ModelConfig(), checkpoint_file)
     g.finalize()
 
@@ -80,5 +80,3 @@ def main(_):
 
 if __name__ == "__main__":
     tf.app.run()
-
-
