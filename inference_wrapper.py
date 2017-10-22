@@ -23,11 +23,12 @@ from inference_utils import inference_wrapper_base
 class InferenceWrapper(inference_wrapper_base.InferenceWrapperBase):
   """Model wrapper class for performing inference with a ShowAndTellModel."""
 
-  def __init__(self):
+  def __init__(self, cnn_model = None):
     super(InferenceWrapper, self).__init__()
+    self.cnn_model = cnn_model
 
   def build_model(self, model_config):
-    model = show_and_tell_model.ShowAndTellModel(model_config, mode="inference")
+    model = show_and_tell_model.ShowAndTellModel(model_config, cnn_model = self.cnn_model, mode="inference")
     model.build()
     return model
 
