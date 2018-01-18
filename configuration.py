@@ -59,10 +59,15 @@ class ModelConfig(object):
         # of the Inception model. Must be provided when starting training for the
         # first time.
         self.inception_checkpoint_file = None
+        self.vgg19_checkpoint_file = None
 
         # Dimensions of Inception v3 input images.
         self.image_height = 299
         self.image_width = 299
+
+        # Dimensions of vgg19 input images.
+        # self.image_height = 224
+        # self.image_width = 224
 
         # Scale used to initialize model variables.
         self.initializer_scale = 0.08
