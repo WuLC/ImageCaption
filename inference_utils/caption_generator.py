@@ -114,7 +114,7 @@ class CaptionGenerator(object):
   def __init__(self,
                model,
                vocab,
-               beam_size= 5,
+               beam_size= 1,
                max_caption_length=20,
                length_normalization_factor=0.0):
     """Initializes the generator.
@@ -162,6 +162,7 @@ class CaptionGenerator(object):
     complete_captions = TopN(self.beam_size)
 
     # Run beam search.
+    probabilities = []
     for _ in range(self.max_caption_length - 1):
       partial_captions_list = partial_captions.extract()
       partial_captions.reset()
@@ -171,7 +172,6 @@ class CaptionGenerator(object):
       softmax, new_states, metadata = self.model.inference_step(sess,
                                                                 input_feed,
                                                                 state_feed)
-
       for i, partial_caption in enumerate(partial_captions_list):
         word_probabilities = softmax[i]
         state = new_states[i]
@@ -179,6 +179,8 @@ class CaptionGenerator(object):
         words_and_probs = list(enumerate(word_probabilities))
         words_and_probs.sort(key=lambda x: -x[1])
         words_and_probs = words_and_probs[0:self.beam_size]
+        if i==0:
+          probabilities.append(words_and_probs[0][1])
         # Each next word gives a new partial caption.
         for w, p in words_and_probs:
           if p < 1e-12:
@@ -208,4 +210,4 @@ class CaptionGenerator(object):
     if not complete_captions.size():
       complete_captions = partial_captions
 
-    return complete_captions.extract(sort=True)
+    return complete_captions.extract(sort=True), probabilities
