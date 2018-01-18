@@ -22,16 +22,16 @@ import inference_wrapper
 from inference_utils import caption_generator
 from inference_utils import vocabulary
 
-# checkpoint_dir = '../aichallenge_model_vgg/train/'
-checkpoint_dir = '../aichallenge_model_inception/train/'
+checkpoint_dir = '../aichallenge_model_vgg/train/'
+# checkpoint_dir = '../aichallenge_model_inception/train/'
 # checkpoint_dir = '../aichallenge_model_inception_with_custom_embedding/train/'
 vocab_file = '../data/aichallenge/TFRecordFile/word_counts.txt'
 test_img_dir = '../data/aichallenge/test1500png/'
-# log_file = './logs/vgg_model_result_mapping.log'
-log_file = './logs/inception_model_result_mapping.log'
+log_file = './logs/vgg_model_result_mapping.log'
+# log_file = './logs/inception_model_result_mapping.log'
 # log_file = './logs/inception_model_result_mapping_custom_embedding.log'
-# result_json_dir = '../data/aichallenge/vgg_result/'
-result_json_dir = '../data/aichallenge/inception_result/'
+result_json_dir = '../data/aichallenge/vgg_result/'
+# result_json_dir = '../data/aichallenge/inception_result/'
 # result_json_dir = '../data/aichallenge/inception_result_custom_embedding/'
 
 FLAGS = tf.flags.FLAGS
@@ -94,7 +94,7 @@ def main(_):
         start_time = time.time()
         g = tf.Graph()
         with g.as_default():
-            model = inference_wrapper.InferenceWrapper(cnn_model = 'InceptionV3')
+            model = inference_wrapper.InferenceWrapper(cnn_model = 'VGG19')
             restore_fn = model.build_graph_from_config(configuration.ModelConfig(), checkpoint_file)
         g.finalize()
 
