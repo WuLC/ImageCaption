@@ -52,7 +52,7 @@ tf.flags.DEFINE_string("checkpoint_dir", checkpoint_dir,
                        "Directory containing model checkpoints.")
 tf.flags.DEFINE_string("eval_dir", eval_dir, "Directory to write event logs.")
 
-tf.flags.DEFINE_integer("eval_interval_secs", 300,
+tf.flags.DEFINE_integer("eval_interval_secs", 600,
                         "Interval between evaluation runs.")
 tf.flags.DEFINE_integer("num_eval_examples", 7500,
                         "Number of examples for evaluation.")
